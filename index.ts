@@ -1,8 +1,8 @@
 import dotenv from 'dotenv';
-import { fetchTestPlan, fetchTestCycle, fetchTestExecutions, fetchTestCase } from './APICalls.ts';
+import { fetchTestPlan, fetchTestCycle, fetchTestExecutions, fetchTestCase } from './logic/APICalls.ts';
 import { logger } from './utils/logger.ts';
 import { deserializeTestCase } from './models/testCase.ts';
-import { getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCaseFromPlan } from './actions.ts';
+import { getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCaseFromPlan } from './logic/actions.ts';
 import test from 'node:test';
 
 dotenv.config();
@@ -51,7 +51,7 @@ async function main() {
         const testCaseDetails = await Promise.all(testCaseDetailsPromise);
         const issueDetails = await Promise.all(issueDetailsPromise);
 
-        
+
 
 
     } catch (error) {

@@ -1,8 +1,8 @@
 import test from "node:test";
 import { fetchTestCycle, fetchTestExecutions, fetchTestPlan } from "./APICalls";
-import { deserializeIssue, type Issue } from "./models/issue";
-import { deserializeTestCase, type TestCase } from "./models/testCase";
-import { logger } from "./utils/logger";
+import { deserializeIssue, type Issue } from "../models/issue";
+import { deserializeTestCase, type TestCase } from "../models/testCase";
+import { logger } from "../utils/logger";
 
 export async function getTestCaseFromPlan(testPlanKey: string) {
     const plan = await fetchTestPlan(testPlanKey, process.env.API_KEY!);

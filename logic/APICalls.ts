@@ -1,9 +1,9 @@
-import { GET_TEST_CYCLE_URL, GET_TEST_PLAN_URL, GET_TEST_EXECUTIONS_URL, GET_TEST_CASE_URL } from './data/constants.ts';
-import { deserializeTestPlan, type TestPlan } from './models/testPlan.ts';
-import { deserializeTestCycle, type TestCycle } from './models/testCycle.ts';
-import { deserializeTestExecutions, type TestExecutionsResponse } from './models/testExecutions.ts';
-import { deserializeTestCase, type TestCase } from './models/testCase.ts';
-import { logger } from './utils/logger.ts';
+import { GET_TEST_CYCLE_URL, GET_TEST_PLAN_URL, GET_TEST_EXECUTIONS_URL, GET_TEST_CASE_URL } from '../data/constants.ts';
+import { deserializeTestPlan, type TestPlan } from '../models/testPlan.ts';
+import { deserializeTestCycle, type TestCycle } from '../models/testCycle.ts';
+import { deserializeTestExecutions, type TestExecutionsResponse } from '../models/testExecutions.ts';
+import { deserializeTestCase, type TestCase } from '../models/testCase.ts';
+import { logger } from '../utils/logger.ts';
 
 export async function fetchTestPlan(testPlanIdOrKey: string, apiKey: string): Promise<TestPlan> {
     logger.info(`Fetching test plan for key: ${testPlanIdOrKey}`);
