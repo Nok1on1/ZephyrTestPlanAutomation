@@ -7,12 +7,6 @@ import test from 'node:test';
 
 dotenv.config();
 
-if (!process.env.API_KEY) {
-    throw new Error("Missing API_KEY in .env file");
-}
-
-const API_KEY = process.env.API_KEY;
-
 
 async function main() {
     const testPlanKey = process.argv[2];
