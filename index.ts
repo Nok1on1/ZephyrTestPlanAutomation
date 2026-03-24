@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
-import { fetchTestPlan, fetchTestCycle, fetchTestExecutions, fetchTestCase } from './actions.ts';
+import { fetchTestPlan, fetchTestCycle, fetchTestExecutions, fetchTestCase } from './APICalls.ts';
 import { logger } from './utils/logger.ts';
+import { deserializeTestCase } from './models/testCase.ts';
+import { getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCaseFromPlan } from './actions.ts';
+import test from 'node:test';
 
 dotenv.config();
 
@@ -20,21 +23,36 @@ async function main() {
     }
 
     try {
-        const plan = await fetchTestPlan(testPlanKey, API_KEY);
+        const testCases = await getTestCaseFromPlan(testPlanKey);
 
-        const testExecPromises = plan.links.testCycles.map(async testCycle => {
-            const cycle = await fetchTestCycle(testCycle.testCycleId.toString(), API_KEY);
-            const executionData = await fetchTestExecutions(cycle.key, API_KEY);
-            return executionData;
+        const testCaseDetailsPromise = testCases.map(async testCase => {
+
+            const name = testCase.name;
+
+            const owner = await getTAForTestCase(testCase);
+
+            const ownerName = owner.displayName;
+
+            return { name, ownerName };
         });
 
-        const testExecutions = await Promise.all(testExecPromises);
 
-        const testCasePromises = testExecutions.flatMap(exec =>
-            exec.values.map(execution => fetchTestCase(execution.testCase.id.toString(), API_KEY))
-        );
 
-        const testCases = await Promise.all(testCasePromises);
+        const issues = await getIssuesFromTestPlan(testPlanKey);
+
+        const issueDetailsPromise = issues.map(async issue => {
+            const responsibility = await getResponsibilitiesForSubtasksOfIssue(issue!);
+            const issueSummary = issue ? issue.summary : 'Unknown Issue';
+
+            return { issueSummary, responsibility };
+        });
+
+
+        const testCaseDetails = await Promise.all(testCaseDetailsPromise);
+        const issueDetails = await Promise.all(issueDetailsPromise);
+
+        
+
 
     } catch (error) {
         logger.error({ err: error }, 'Error fetching test plan details');

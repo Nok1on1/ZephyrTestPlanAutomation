@@ -1,96 +1,110 @@
-import { GET_TEST_CYCLE_URL, GET_TEST_PLAN_URL, GET_TEST_EXECUTIONS_URL, GET_TEST_CASE_URL } from './data/constants.ts';
-import { deserializeTestPlan, type TestPlan } from './models/testPlan.ts';
-import { deserializeTestCycle, type TestCycle } from './models/testCycle.ts';
-import { deserializeTestExecutions, type TestExecutionsResponse } from './models/testExecutions.ts';
-import { deserializeTestCase, type TestCase } from './models/testCase.ts';
-import { logger } from './utils/logger.ts';
+import test from "node:test";
+import { fetchTestCycle, fetchTestExecutions, fetchTestPlan } from "./APICalls";
+import { deserializeIssue, type Issue } from "./models/issue";
+import { deserializeTestCase, type TestCase } from "./models/testCase";
+import { logger } from "./utils/logger";
 
-export async function fetchTestPlan(testPlanIdOrKey: string, apiKey: string): Promise<TestPlan> {
-    logger.info(`Fetching test plan for key: ${testPlanIdOrKey}`);
-    const url = GET_TEST_PLAN_URL(testPlanIdOrKey);
+export async function getTestCaseFromPlan(testPlanKey: string) {
+    const plan = await fetchTestPlan(testPlanKey, process.env.API_KEY!);
 
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': apiKey
-        }
+    const testExecPromises = plan.links.testCycles.map(async testCycle => {
+        const cycle = await fetchTestCycle(testCycle.testCycleId.toString(), process.env.API_KEY!);
+        const executionData = await fetchTestExecutions(cycle.key, process.env.API_KEY!);
+        return executionData;
     });
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch test plan: ${response.status} ${response.statusText}`);
-    }
+    const testExecutions = await Promise.all(testExecPromises);
 
-    const data = await response.json();
-    logger.info({ plan: data }, 'Successfully fetched plan');
-    return deserializeTestPlan(data);
+    const testCasePromises = testExecutions.flatMap(exec =>
+        exec.values.map(async execution => {
+            const response = await fetch(execution.testCase.self, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': process.env.API_KEY!
+                }
+            });
+            return deserializeTestCase(await response.json());
+        })
+    );
+
+    const testCases = await Promise.all(testCasePromises);
+
+    return testCases;
 }
 
-export async function fetchTestCycle(testCycleIdOrKey: string, apiKey: string): Promise<TestCycle> {
-    logger.info(`Fetching test cycle for key: ${testCycleIdOrKey}`);
-    const url = GET_TEST_CYCLE_URL(testCycleIdOrKey);
 
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': apiKey
+export async function getIssuesFromTestPlan(testPlanKey: string) {
+    const plan = await fetchTestPlan(testPlanKey, process.env.API_KEY!);
+
+    const auth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_TOKEN}`).toString('base64');
+
+    const issues = plan.links.issues.map(async issue => {
+        const response = await fetch(issue.target, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Basic ${auth}`
+            }
+        });
+
+        if (!response.ok) {
+            logger.error({ err: new Error(`Failed to fetch issue ${issue.target}: ${response.status} ${response.statusText}`) }, 'Error fetching issue details');
+            return null;
         }
+
+        const data = await response.json();
+
+        return deserializeIssue(data);
     });
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch test cycle: ${response.status} ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    logger.info({ cycle: data }, `Successfully fetched test cycle ${testCycleIdOrKey}`);
-    return deserializeTestCycle(data);
+    return Promise.all(issues);
 }
 
-export async function fetchTestExecutions(testCycleIdOrKey: string, apiKey: string): Promise<TestExecutionsResponse> {
-    logger.info(`Fetching test executions for cycle: ${testCycleIdOrKey}`);
-    const url = GET_TEST_EXECUTIONS_URL(testCycleIdOrKey);
+export async function getResponsibilitiesForSubtasksOfIssue(issue: Issue) {
+    const auth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_TOKEN}`).toString('base64');
 
-    const response = await fetch(url, {
-        method: 'GET',
-        headers: {
-            'Accept': 'application/json',
-            'Authorization': apiKey
-        }
+    const responsibilitiesPromise = issue.subtasks.map(async subtask => {
+
+        const response = await fetch("https://giomiqa.atlassian.net/rest/api/2/issue/" + subtask.id, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Authorization': `Basic ${auth}`
+            }
+        });
+
+        const data = deserializeIssue(await response.json());
+
+        return data.assignee ? data.assignee.displayName : 'Unassigned';
     });
 
-    if (!response.ok) {
-        throw new Error(`Failed to fetch test executions: ${url} | ${response.status} ${response.statusText}`);
-    }
+    const responsibilities = [...new Set(await Promise.all(responsibilitiesPromise))];
 
-    const data = await response.json();
+    logger.info(`Responsibilities for issue ${issue.key}: ${responsibilities.join(', ')}`);
 
-    if (!data || !Array.isArray(data.values)) {
-        throw new Error("Invalid response format: Expected paginated response with 'values' array");
-    }
-
-    const result = deserializeTestExecutions(data);
-    logger.info({ executionCount: result.values.length }, `Successfully fetched executions for cycle ${testCycleIdOrKey}`);
-    return result;
+    return responsibilities;
 }
 
-export async function fetchTestCase(testCaseIdOrKey: string, apiKey: string): Promise<TestCase> {
-    logger.info(`Fetching test case for key: ${testCaseIdOrKey}`);
-    const url = GET_TEST_CASE_URL(testCaseIdOrKey);
 
-    const response = await fetch(url, {
+export async function getTAForTestCase(testCase: TestCase) {
+    const auth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_TOKEN}`).toString('base64');
+
+    const response = await fetch(testCase.owner.self, {
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': apiKey
+            'Authorization': `Basic ${auth}`
         }
     });
 
     if (!response.ok) {
-        throw new Error(`Failed to fetch test case: ${response.status} ${response.statusText}`);
+        logger.error({ err: new Error(`Failed to fetch test case owner ${testCase.owner.self}: ${response.status} ${response.statusText}`) }, 'Error fetching test case owner details');
+        return null;
     }
 
     const data = await response.json();
-    logger.info({ testCase: data.key }, `Successfully fetched test case ${testCaseIdOrKey}`);
-    return deserializeTestCase(data);
+
+    logger.info(`Test case ${testCase.key} is owned by ${JSON.stringify(data.displayName)}`);
+    return data;
 }
