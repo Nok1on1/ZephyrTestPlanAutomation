@@ -1,10 +1,14 @@
+#!/usr/bin/env node
 import dotenv from 'dotenv';
+import path from 'path';
+import os from 'os';
 import { logger } from './utils/logger.ts';
 import { createPlan, getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCasesFromPlan } from './logic/actions.ts';
 import { fetchTestPlan } from './logic/APICalls.ts';
 import { createObjective } from './utils/tableFactory.ts';
 
-dotenv.config();
+// Load .zephyr_env from the user's home directory
+dotenv.config({ path: path.join(os.homedir(), '.zephyr_env') });
 
 async function main() {
     let testPlanKey = '';
@@ -13,7 +17,10 @@ async function main() {
 
     for (let i = 2; i < process.argv.length; i++) {
         const arg = process.argv[i]!;
-        if (arg === '-dQuality' && i + 1 < process.argv.length) {
+        if (arg === '--help' || arg === '-h') {
+            logger.info("Usage: zephyr-cli <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]");
+            process.exit(0);
+        } else if (arg === '-dQuality' && i + 1 < process.argv.length) {
             dQuality = process.argv[++i]!;
         } else if (arg === '-dTime' && i + 1 < process.argv.length) {
             dTime = process.argv[++i]!;

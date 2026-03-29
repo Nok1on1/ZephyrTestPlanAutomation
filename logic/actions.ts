@@ -1,4 +1,3 @@
-import test from "node:test";
 import { createIssueLink, createTestCycleLink, fetchTestCycle, fetchTestExecutions, fetchTestPlan } from "./APICalls";
 import { deserializeIssue, type Issue } from "../models/issue";
 import { deserializeTestCase, type TestCase } from "../models/testCase";
