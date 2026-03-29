@@ -4,7 +4,6 @@ import { deserializeIssue, type Issue } from "../models/issue";
 import { deserializeTestCase, type TestCase } from "../models/testCase";
 import { logger } from "../utils/logger";
 import { CREATE_PLAN } from "../data/constants";
-import { exec } from "child_process";
 import type { TestPlan } from "../models/testPlan";
 
 export async function getTestCasesFromPlan(testPlanKey: string) {

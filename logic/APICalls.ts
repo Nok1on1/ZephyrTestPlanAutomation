@@ -4,7 +4,6 @@ import { deserializeTestCycle, type TestCycle } from '../models/testCycle.ts';
 import { deserializeTestExecutions, type TestExecutionsResponse } from '../models/testExecutions.ts';
 import { deserializeTestCase, type TestCase } from '../models/testCase.ts';
 import { logger } from '../utils/logger.ts';
-import test from 'node:test';
 
 
 export async function fetchTestPlan(testPlanIdOrKey: string): Promise<TestPlan> {

@@ -2,12 +2,9 @@ import dotenv from 'dotenv';
 import { logger } from './utils/logger.ts';
 import { createPlan, getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCasesFromPlan } from './logic/actions.ts';
 import { fetchTestPlan } from './logic/APICalls.ts';
-import type { Issue } from './models/issue.ts';
 import { createObjective } from './utils/tableFactory.ts';
-import { log } from 'node:console';
 
 dotenv.config();
-
 
 async function main() {
     let testPlanKey = '';
@@ -26,7 +23,7 @@ async function main() {
     }
 
     logger.info(`Current values - testPlanKey: ${testPlanKey}, dQuality: ${dQuality}, dTime: ${dTime}`);
-    
+
     if (!testPlanKey) {
         logger.error("Usage: npm start <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]");
         process.exit(1);
@@ -75,7 +72,9 @@ async function main() {
             });
 
 
-        createPlan(plan, issues, objective);
+        const newPlan = await createPlan(plan, issues, objective);
+
+        logger.info(`New test plan created successfully with Key: \x1b[31m${newPlan.key}\x1b[0m`);
     } catch (error) {
         logger.error({ err: error }, 'Error fetching test plan details');
         process.exit(1);
