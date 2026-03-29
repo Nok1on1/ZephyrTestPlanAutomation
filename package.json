@@ -7,7 +7,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "main": "tsx index.ts",
-    "build": "tsup index.ts --format esm --clean",
+    "build": "npx tsup index.ts --format esm --clean",
     "prepublishOnly": "npm run build",
     "prepare": "npm run build"
   },
