@@ -1,11 +1,13 @@
-import { GET_TEST_CYCLE_URL, GET_TEST_PLAN_URL, GET_TEST_EXECUTIONS_URL, GET_TEST_CASE_URL } from '../data/constants.ts';
+import { GET_TEST_CYCLE_URL, GET_TEST_PLAN_URL, GET_TEST_EXECUTIONS_URL, GET_TEST_CASE_URL, CREATE_TEST_CYCLE_LINK_URL, CREATE_ISSUE_LINK_URL } from '../data/constants.ts';
 import { deserializeTestPlan, type TestPlan } from '../models/testPlan.ts';
 import { deserializeTestCycle, type TestCycle } from '../models/testCycle.ts';
 import { deserializeTestExecutions, type TestExecutionsResponse } from '../models/testExecutions.ts';
 import { deserializeTestCase, type TestCase } from '../models/testCase.ts';
 import { logger } from '../utils/logger.ts';
+import test from 'node:test';
 
-export async function fetchTestPlan(testPlanIdOrKey: string, apiKey: string): Promise<TestPlan> {
+
+export async function fetchTestPlan(testPlanIdOrKey: string): Promise<TestPlan> {
     logger.info(`Fetching test plan for key: ${testPlanIdOrKey}`);
     const url = GET_TEST_PLAN_URL(testPlanIdOrKey);
 
@@ -13,7 +15,7 @@ export async function fetchTestPlan(testPlanIdOrKey: string, apiKey: string): Pr
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': apiKey
+            'Authorization': process.env.API_KEY!
         }
     });
 
@@ -26,7 +28,7 @@ export async function fetchTestPlan(testPlanIdOrKey: string, apiKey: string): Pr
     return deserializeTestPlan(data);
 }
 
-export async function fetchTestCycle(testCycleIdOrKey: string, apiKey: string): Promise<TestCycle> {
+export async function fetchTestCycle(testCycleIdOrKey: string): Promise<TestCycle> {
     logger.info(`Fetching test cycle for key: ${testCycleIdOrKey}`);
     const url = GET_TEST_CYCLE_URL(testCycleIdOrKey);
 
@@ -34,7 +36,7 @@ export async function fetchTestCycle(testCycleIdOrKey: string, apiKey: string): 
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': apiKey
+            'Authorization': process.env.API_KEY!
         }
     });
 
@@ -47,7 +49,7 @@ export async function fetchTestCycle(testCycleIdOrKey: string, apiKey: string): 
     return deserializeTestCycle(data);
 }
 
-export async function fetchTestExecutions(testCycleIdOrKey: string, apiKey: string): Promise<TestExecutionsResponse> {
+export async function fetchTestExecutions(testCycleIdOrKey: string): Promise<TestExecutionsResponse> {
     logger.info(`Fetching test executions for cycle: ${testCycleIdOrKey}`);
     const url = GET_TEST_EXECUTIONS_URL(testCycleIdOrKey);
 
@@ -55,7 +57,7 @@ export async function fetchTestExecutions(testCycleIdOrKey: string, apiKey: stri
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': apiKey
+            'Authorization': process.env.API_KEY!
         }
     });
 
@@ -74,7 +76,7 @@ export async function fetchTestExecutions(testCycleIdOrKey: string, apiKey: stri
     return result;
 }
 
-export async function fetchTestCase(testCaseIdOrKey: string, apiKey: string): Promise<TestCase> {
+export async function fetchTestCase(testCaseIdOrKey: string): Promise<TestCase> {
     logger.info(`Fetching test case for key: ${testCaseIdOrKey}`);
     const url = GET_TEST_CASE_URL(testCaseIdOrKey);
 
@@ -82,7 +84,7 @@ export async function fetchTestCase(testCaseIdOrKey: string, apiKey: string): Pr
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': apiKey
+            'Authorization': process.env.API_KEY!
         }
     });
 
@@ -93,4 +95,56 @@ export async function fetchTestCase(testCaseIdOrKey: string, apiKey: string): Pr
     const data = await response.json();
     logger.info({ testCase: data.key }, `Successfully fetched test case ${testCaseIdOrKey}`);
     return deserializeTestCase(data);
+}
+
+
+export async function createTestCycleLink(testPlanIdOrKey: string, testCycleIdOrKey: string) {
+    const url = CREATE_TEST_CYCLE_LINK_URL(testPlanIdOrKey);
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': process.env.API_KEY!,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            testCycleIdOrKey: testCycleIdOrKey
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to create test cycle link: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    logger.info(`Successfully linked test cycle ${testCycleIdOrKey} to plan ${testPlanIdOrKey}`);
+
+    return data;
+}
+
+
+export async function createIssueLink(testPlanIdOrKey: string, issueId: string) {
+    const url = CREATE_ISSUE_LINK_URL(testPlanIdOrKey);
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': process.env.API_KEY!,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            issueId: issueId
+        })
+    });
+
+    if (!response.ok) {
+        throw new Error(`Failed to create issue link: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    logger.info(`Successfully linked issue ${issueId} to plan ${testPlanIdOrKey}`);
+
+    return data;
 }

@@ -5,11 +5,11 @@ import { deserializeTestCase, type TestCase } from "../models/testCase";
 import { logger } from "../utils/logger";
 
 export async function getTestCaseFromPlan(testPlanKey: string) {
-    const plan = await fetchTestPlan(testPlanKey, process.env.API_KEY!);
+    const plan = await fetchTestPlan(testPlanKey);
 
     const testExecPromises = plan.links.testCycles.map(async testCycle => {
-        const cycle = await fetchTestCycle(testCycle.testCycleId.toString(), process.env.API_KEY!);
-        const executionData = await fetchTestExecutions(cycle.key, process.env.API_KEY!);
+        const cycle = await fetchTestCycle(testCycle.testCycleId.toString());
+        const executionData = await fetchTestExecutions(cycle.key);
         return executionData;
     });
 
@@ -35,7 +35,7 @@ export async function getTestCaseFromPlan(testPlanKey: string) {
 
 
 export async function getIssuesFromTestPlan(testPlanKey: string) {
-    const plan = await fetchTestPlan(testPlanKey, process.env.API_KEY!);
+    const plan = await fetchTestPlan(testPlanKey);
 
     const auth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_TOKEN}`).toString('base64');
 
@@ -107,4 +107,8 @@ export async function getTAForTestCase(testCase: TestCase) {
 
     logger.info(`Test case ${testCase.key} is owned by ${JSON.stringify(data.displayName)}`);
     return data;
+}
+
+export async function createNewPlan(issues: Issue[], testCases: TestCase[], Objective: string) {
+    
 }

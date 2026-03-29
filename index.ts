@@ -1,9 +1,6 @@
 import dotenv from 'dotenv';
-import { fetchTestPlan, fetchTestCycle, fetchTestExecutions, fetchTestCase } from './logic/APICalls.ts';
 import { logger } from './utils/logger.ts';
-import { deserializeTestCase } from './models/testCase.ts';
 import { getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCaseFromPlan } from './logic/actions.ts';
-import test from 'node:test';
 
 dotenv.config();
 
@@ -30,8 +27,6 @@ async function main() {
             return { name, ownerName };
         });
 
-
-
         const issues = await getIssuesFromTestPlan(testPlanKey);
 
         const issueDetailsPromise = issues.map(async issue => {
@@ -44,6 +39,7 @@ async function main() {
 
         const testCaseDetails = await Promise.all(testCaseDetailsPromise);
         const issueDetails = await Promise.all(issueDetailsPromise);
+
 
 
 

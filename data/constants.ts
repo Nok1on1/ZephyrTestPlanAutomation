@@ -17,3 +17,11 @@ export const GET_TEST_EXECUTIONS_URL = (testCycleIdOrKey: string) => {
 export const PUT_TEST_PLAN_URL = (testPlanIdOrKey: string) => {
     return `https://eu.api.zephyrscale.smartbear.com/v2/testplans/${testPlanIdOrKey}`;
 }
+
+export const CREATE_TEST_CYCLE_LINK_URL = (testPlanIdOrKey: string) => {
+    return `https://api.zephyrscale.smartbear.com/v2/testplans/${testPlanIdOrKey}/links/testcycles`
+}
+
+export const CREATE_ISSUE_LINK_URL = (testPlanIdOrKey: string) => {
+    return `https://eu.api.zephyrscale.smartbear.com/v2/testplans/${testPlanIdOrKey}/links/issues`;
+}
