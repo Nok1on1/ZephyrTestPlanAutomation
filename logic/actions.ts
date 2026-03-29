@@ -1,22 +1,20 @@
 import test from "node:test";
-import { fetchTestCycle, fetchTestExecutions, fetchTestPlan } from "./APICalls";
+import { createIssueLink, createTestCycleLink, fetchTestCycle, fetchTestExecutions, fetchTestPlan } from "./APICalls";
 import { deserializeIssue, type Issue } from "../models/issue";
 import { deserializeTestCase, type TestCase } from "../models/testCase";
 import { logger } from "../utils/logger";
+import { CREATE_PLAN } from "../data/constants";
+import { exec } from "child_process";
+import type { TestPlan } from "../models/testPlan";
 
-export async function getTestCaseFromPlan(testPlanKey: string) {
+export async function getTestCasesFromPlan(testPlanKey: string) {
     const plan = await fetchTestPlan(testPlanKey);
 
-    const testExecPromises = plan.links.testCycles.map(async testCycle => {
+    const testCasePromises = plan.links.testCycles.map(async testCycle => {
         const cycle = await fetchTestCycle(testCycle.testCycleId.toString());
         const executionData = await fetchTestExecutions(cycle.key);
-        return executionData;
-    });
 
-    const testExecutions = await Promise.all(testExecPromises);
-
-    const testCasePromises = testExecutions.flatMap(exec =>
-        exec.values.map(async execution => {
+        const testCaseData = executionData.values.map(async execution => {
             const response = await fetch(execution.testCase.self, {
                 method: 'GET',
                 headers: {
@@ -26,15 +24,16 @@ export async function getTestCaseFromPlan(testPlanKey: string) {
             });
             return deserializeTestCase(await response.json());
         })
-    );
+
+        return Promise.all(testCaseData);
+    });
 
     const testCases = await Promise.all(testCasePromises);
-
-    return testCases;
+    return testCases.flat();
 }
 
 
-export async function getIssuesFromTestPlan(testPlanKey: string) {
+export async function getIssuesFromTestPlan(testPlanKey: string): Promise<Issue[]> {
     const plan = await fetchTestPlan(testPlanKey);
 
     const auth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_TOKEN}`).toString('base64');
@@ -58,7 +57,8 @@ export async function getIssuesFromTestPlan(testPlanKey: string) {
         return deserializeIssue(data);
     });
 
-    return Promise.all(issues);
+    const resolvedIssues = await Promise.all(issues);
+    return resolvedIssues.filter((issue): issue is Issue => issue !== null);
 }
 
 export async function getResponsibilitiesForSubtasksOfIssue(issue: Issue) {
@@ -109,6 +109,37 @@ export async function getTAForTestCase(testCase: TestCase) {
     return data;
 }
 
-export async function createNewPlan(issues: Issue[], testCases: TestCase[], Objective: string) {
-    
+export async function createPlan(testPlan: TestPlan, issues: Issue[], objective: string) {
+    const response = await fetch(CREATE_PLAN, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Authorization': process.env.API_KEY!,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            projectKey: testPlan.key.split("-")[0]!,
+            name: testPlan.name,
+            objective
+        })
+    });
+
+
+    if (!response.ok) {
+        throw new Error(`Failed to create test plan: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    logger.info(`Successfully created test plan: ${data.key}`);
+
+
+    issues.forEach(issue => {
+        createIssueLink(data.key, issue.id)
+    })
+
+    testPlan.links.testCycles.forEach(testCycle => {
+        createTestCycleLink(data.key, testCycle.testCycleId.toString())
+    });
+
+    return data;
 }

@@ -1,6 +1,9 @@
 import dotenv from 'dotenv';
 import { logger } from './utils/logger.ts';
-import { getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCaseFromPlan } from './logic/actions.ts';
+import { createPlan, getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCasesFromPlan } from './logic/actions.ts';
+import { fetchTestPlan } from './logic/APICalls.ts';
+import type { Issue } from './models/issue.ts';
+import { createObjective } from './utils/tableMaker.ts';
 
 dotenv.config();
 
@@ -14,7 +17,10 @@ async function main() {
     }
 
     try {
-        const testCases = await getTestCaseFromPlan(testPlanKey);
+
+        const plan = await fetchTestPlan(testPlanKey);
+
+        const testCases = await getTestCasesFromPlan(testPlanKey);
 
         const testCaseDetailsPromise = testCases.map(async testCase => {
 
@@ -24,7 +30,7 @@ async function main() {
 
             const ownerName = owner.displayName;
 
-            return { name, ownerName };
+            return [name, ownerName];
         });
 
         const issues = await getIssuesFromTestPlan(testPlanKey);
@@ -33,17 +39,23 @@ async function main() {
             const responsibility = await getResponsibilitiesForSubtasksOfIssue(issue!);
             const issueSummary = issue ? issue.summary : 'Unknown Issue';
 
-            return { issueSummary, responsibility };
+            return [ issueSummary, responsibility ];
         });
 
 
         const testCaseDetails = await Promise.all(testCaseDetailsPromise);
         const issueDetails = await Promise.all(issueDetailsPromise);
 
+        const objective = createObjective({
+            header: ['Issue Summary', 'Responsibility'],
+            data: issueDetails
+        }, {
+            header: ['Test Case Name', 'Test Automation Owner'],
+            data: testCaseDetails
+        });
 
 
-
-
+        createPlan(plan, issues, objective);
     } catch (error) {
         logger.error({ err: error }, 'Error fetching test plan details');
         process.exit(1);
