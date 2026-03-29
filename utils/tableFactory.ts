@@ -61,7 +61,7 @@ export const createObjective = (...sections: ObjectiveSection[]) => {
 
     const table = `<table style="width: 50%; margin: auto; border-width: 1px; border-style: solid;">${createColGroup(columnCount)}<tbody>${body}</tbody></table>`;
 
-    logger.info('Objective table created successfully: ' + table);
+    logger.info('Objective table created successfully');
 
     return table;
 }

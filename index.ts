@@ -3,16 +3,32 @@ import { logger } from './utils/logger.ts';
 import { createPlan, getIssuesFromTestPlan, getResponsibilitiesForSubtasksOfIssue, getTAForTestCase, getTestCasesFromPlan } from './logic/actions.ts';
 import { fetchTestPlan } from './logic/APICalls.ts';
 import type { Issue } from './models/issue.ts';
-import { createObjective } from './utils/tableMaker.ts';
+import { createObjective } from './utils/tableFactory.ts';
+import { log } from 'node:console';
 
 dotenv.config();
 
 
 async function main() {
-    const testPlanKey = process.argv[2];
+    let testPlanKey = '';
+    let dQuality = '';
+    let dTime = '';
 
+    for (let i = 2; i < process.argv.length; i++) {
+        const arg = process.argv[i]!;
+        if (arg === '-dQuality' && i + 1 < process.argv.length) {
+            dQuality = process.argv[++i]!;
+        } else if (arg === '-dTime' && i + 1 < process.argv.length) {
+            dTime = process.argv[++i]!;
+        } else if (!arg.startsWith('-') && !testPlanKey) {
+            testPlanKey = arg!;
+        }
+    }
+
+    logger.info(`Current values - testPlanKey: ${testPlanKey}, dQuality: ${dQuality}, dTime: ${dTime}`);
+    
     if (!testPlanKey) {
-        logger.error("Usage: npm start <TEST_PLAN_KEY>");
+        logger.error("Usage: npm start <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]");
         process.exit(1);
     }
 
@@ -30,7 +46,7 @@ async function main() {
 
             const ownerName = owner.displayName;
 
-            return [name, ownerName];
+            return [name, ownerName, dTime, dQuality];
         });
 
         const issues = await getIssuesFromTestPlan(testPlanKey);
@@ -39,7 +55,7 @@ async function main() {
             const responsibility = await getResponsibilitiesForSubtasksOfIssue(issue!);
             const issueSummary = issue ? issue.summary : 'Unknown Issue';
 
-            return [ issueSummary, responsibility ];
+            return [issueSummary, responsibility.join(', '), dTime, dQuality];
         });
 
 
@@ -47,12 +63,16 @@ async function main() {
         const issueDetails = await Promise.all(issueDetailsPromise);
 
         const objective = createObjective({
-            header: ['Issue Summary', 'Responsibility'],
+            header: ['დასანერგ პაკეტში შემავალი საკითხები', 'პასუხისმგებელი', 'ხანგრძლივობა', 'ხარისხის შეფასება'],
             data: issueDetails
         }, {
-            header: ['Test Case Name', 'Test Automation Owner'],
+            header: ['რეგრესული ტესტირების საკითხები', 'პასუხისმგებელი', 'ხანგრძლივობა', 'ხარისხის შეფასება'],
             data: testCaseDetails
-        });
+        },
+            {
+                header: ['წარმადობის ტესტირება', 'პასუხისმგებელი', 'ხანგრძლივობა', 'ხარისხის შეფასება'],
+                data: []
+            });
 
 
         createPlan(plan, issues, objective);
