@@ -14,7 +14,7 @@ export async function fetchTestPlan(testPlanIdOrKey: string): Promise<TestPlan> 
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': process.env.API_KEY!
+            'Authorization': process.env.ZEPHYR_TOKEN!
         }
     });
 
@@ -35,7 +35,7 @@ export async function fetchTestCycle(testCycleIdOrKey: string): Promise<TestCycl
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': process.env.API_KEY!
+            'Authorization': process.env.ZEPHYR_TOKEN!
         }
     });
 
@@ -56,7 +56,7 @@ export async function fetchTestExecutions(testCycleIdOrKey: string): Promise<Tes
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': process.env.API_KEY!
+            'Authorization': process.env.ZEPHYR_TOKEN!
         }
     });
 
@@ -83,7 +83,7 @@ export async function fetchTestCase(testCaseIdOrKey: string): Promise<TestCase> 
         method: 'GET',
         headers: {
             'Accept': 'application/json',
-            'Authorization': process.env.API_KEY!
+            'Authorization': process.env.ZEPHYR_TOKEN!
         }
     });
 
@@ -104,7 +104,7 @@ export async function createTestCycleLink(testPlanIdOrKey: string, testCycleIdOr
         method: 'POST',
         headers: {
             'Accept': 'application/json',
-            'Authorization': process.env.API_KEY!,
+            'Authorization': process.env.ZEPHYR_TOKEN!,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -130,7 +130,7 @@ export async function createIssueLink(testPlanIdOrKey: string, issueId: string) 
         method: 'POST',
         headers: {
             'Accept': 'application/json',
-            'Authorization': process.env.API_KEY!,
+            'Authorization': process.env.ZEPHYR_TOKEN!,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({

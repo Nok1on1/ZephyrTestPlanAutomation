@@ -3,7 +3,7 @@
 A command-line tool designed to fetch Zephyr Scale Test Plans, extract Sub-tasks from Jira Issues, fetch Test Cases and build a consolidated document (e.g. Test Plan Objective table) for your Test cycle. It automatically generates a newly formatted Test Plan.
 
 ## Prerequisites
-- **Node.js**: Ensure Node.js is installed.
+- **Node.js**: Ensure Node.js is installed (v24 or more).
 - **Zephyr Scale API Key**: A token used to access Zephyr Scale.
 - **Jira API Token**: An API token generated from your Atlassian account,
 - **Jira Email** your Atlassian account email.
@@ -11,14 +11,19 @@ A command-line tool designed to fetch Zephyr Scale Test Plans, extract Sub-tasks
 ## Setup
 
 1. **Clone the repository** (if you haven't already) and install the dependencies:
-   ```bash
-   npm install
-   ```
+```bash
+npm install
+```
 
 2. **Build the project**:
-   ```bash
-   npm run build
-   ```
+```bash
+npm run build
+```
+
+3. **install globally**:
+```bash
+npm install -g .
+```
 
 3. **Configure Environment Variables**:
    The tool searches for a file named `.zephyr_env` located in your user's home directory (e.g., `~/.zephyr_env` on Linux/macOS or `C:\Users\<YourUser>\.zephyr_env` on Windows).
@@ -26,7 +31,7 @@ A command-line tool designed to fetch Zephyr Scale Test Plans, extract Sub-tasks
    Create that file and populate it with the following environment variables:
    ```env
    # Your Zephyr Scale API Token
-   API_KEY=Bearer <YOUR_ZEPHYR_TOKEN>
+   ZEPHYR_TOKEN=Bearer <YOUR_ZEPHYR_TOKEN>
 
    # Your Jira Email Address
    JIRA_EMAIL=your.email@example.com
@@ -40,7 +45,7 @@ A command-line tool designed to fetch Zephyr Scale Test Plans, extract Sub-tasks
 
 ## Usage
 
-You can run the tool in two ways: using local `npm` scripts or by linking the globally exposed binary.
+You can run the tool in two ways: using local `npm` scripts or by globally.
 
 ### Option A: Using NPM 
 You can run the uncompiled typescript version directly:
@@ -49,11 +54,12 @@ npm run main <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]
 ```
 
 ### Option B: Using the Global Command
-After building the project, you can install the package globally or link it:
+After Installing Program With
 ```bash
-npm link
+npm install -g .
 ```
-Then, you can use the `zPlan` command anywhere in your terminal:
+
+you can use the `zPlan` command anywhere in your terminal:
 ```bash
 zPlan <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]
 ```

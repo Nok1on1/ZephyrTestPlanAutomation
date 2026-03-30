@@ -17,7 +17,7 @@ export async function getTestCasesFromPlan(testPlanKey: string) {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
-                    'Authorization': process.env.API_KEY!
+                    'Authorization': process.env.ZEPHYR_TOKEN!
                 }
             });
             return deserializeTestCase(await response.json());
@@ -112,7 +112,7 @@ export async function createPlan(testPlan: TestPlan, issues: Issue[], objective:
         method: 'POST',
         headers: {
             'Accept': 'application/json',
-            'Authorization': process.env.API_KEY!,
+            'Authorization': process.env.ZEPHYR_TOKEN!,
             'Content-Type': 'application/json'
         },
         body: JSON.stringify({
