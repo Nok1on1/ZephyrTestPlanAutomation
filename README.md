@@ -39,6 +39,11 @@ npm install -g .
    # Your Jira API Token
    JIRA_TOKEN=<YOUR_JIRA_API_TOKEN>
 
+   #ZEPHYR REGION (Optional)
+   # if hit by 401 Unauthorized servers may be in eu.
+   # ex: REGION=eu
+   REGION=<ZEPHYR_REGION>
+
    # Logging level (optional, default is 'info')
    # LOG_LEVEL=debug
    ```

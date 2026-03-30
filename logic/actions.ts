@@ -61,10 +61,11 @@ export async function getIssuesFromTestPlan(testPlanKey: string): Promise<Issue[
 
 export async function getResponsibilitiesForSubtasksOfIssue(issue: Issue) {
     const auth = Buffer.from(`${process.env.JIRA_EMAIL}:${process.env.JIRA_TOKEN}`).toString('base64');
+    const url = issue.self.substring(0, issue.self.lastIndexOf('/'));
 
     const responsibilitiesPromise = issue.subtasks.map(async subtask => {
 
-        const response = await fetch("https://giomiqa.atlassian.net/rest/api/2/issue/" + subtask.id, {
+        const response = await fetch(url + `/${subtask.id}`, {
             method: 'GET',
             headers: {
                 'Accept': 'application/json',
