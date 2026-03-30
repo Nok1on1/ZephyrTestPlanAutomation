@@ -18,7 +18,7 @@ async function main() {
     for (let i = 2; i < process.argv.length; i++) {
         const arg = process.argv[i]!;
         if (arg === '--help' || arg === '-h') {
-            logger.info("Usage: zephyr-cli <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]");
+            logger.info("Usage: zPlan <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]");
             process.exit(0);
         } else if (arg === '-dQuality' && i + 1 < process.argv.length) {
             dQuality = process.argv[++i]!;
@@ -33,6 +33,7 @@ async function main() {
 
     if (!testPlanKey) {
         logger.error("Usage: npm start <TEST_PLAN_KEY> [-dTime <time>] [-dQuality <quality>]");
+        logger.error("INFO: Make sure .zephyr_env file is properly configured in your home directory.");
         process.exit(1);
     }
 
